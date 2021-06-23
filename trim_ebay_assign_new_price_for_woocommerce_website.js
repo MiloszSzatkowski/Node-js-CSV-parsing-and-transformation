@@ -21,7 +21,7 @@ function calculate_price_without_VAT (price_with_VAT) {
   return ( Math.round((price_with_VAT / 1.2) * 100) / 100 );
 }
 
-save_MH_to_array();
+// save_MH_to_array();
 
 function save_MH_to_array() {
   fs.createReadStream('ebay amazon prices update 22 06 2021 - Get it ready for Change - Myhomeware - lookup for website.csv')
@@ -39,11 +39,12 @@ function save_MH_to_array() {
 
           if (saved_array[i].StartPrice != ""){
             myhomeware_prices.push([
-              saved_array[i].CustomLabel,
-              saved_array[i].StartPrice,
-              (parseFloat(saved_array[i].StartPrice) - price_factor),
-              (calculate_price_without_VAT((parseFloat(saved_array[i].StartPrice) - price_factor)))
-              ]);
+              { sku: saved_array[i].CustomLabel,
+                ebay_price: saved_array[i].StartPrice,
+                website_price_no_vat: (calculate_price_without_VAT((parseFloat(saved_array[i].StartPrice) - price_factor))),
+                website_price_with_vat: (parseFloat(saved_array[i].StartPrice) - price_factor)
+              }
+            ]);
           }
 
           console.log("");
@@ -59,8 +60,9 @@ function save_MH_to_array() {
   // go_next();
 }
 
+go_next();
 
-const header = ["Action(SiteID=UK|Country=GB|Currency=GBP|Version=1111|CC=UTF-8)","ItemID","Title","SiteID","Currency","StartPrice","OldAntPrice","BlackSKU","BuyItNowPrice","Quantity","Relationship","RelationshipDetails","CustomLabel"];
+const header = ["ID","Type","SKU","Name","Parent", '"Regular price"', "Old_Black_Price", "Old_Black_SKU", "Difference", "FULL_OBJ"];
 
 function go_next() {
   fs.createReadStream('wc-product-export-22-6-2021-1624375892944.csv')
@@ -69,24 +71,21 @@ function go_next() {
     .on('end', () => {
       for(let i = 0; i < results.length; i++){
 
-        let sku = results[i].CustomLabel;
+        let sku = results[i].SKU;
+        let title = results[i].Name;
 
         let include = false;
-        let listing_tab = false;
         new_price = "";
 
 
         // START OF IF -> REVISE **********************************************************************************************************
         //check for the type of row
-        if (results[i].Action == "Revise" ) {
-          //it's a listing tab
-          if ( results[i].Title.includes("Anthracite") ||  results[i].Title.includes("Antracite")) {
+        if (results[i].Type == "variable" ) {
+          //it's a listing tab - DONT INCLUDE
+          if ( results[i].Name.includes("Anthracite") ||  results[i].Name.includes("Antracite")) {
             //collect all data
 
-            include = true;
-            listing_tab = true;
-
-            console.log(results[i].Title);
+            include = false;
 
           }
         } else if ( sku != ""  ) {
@@ -94,8 +93,7 @@ function go_next() {
           if (sku.includes("FC") || sku.includes("CC") || sku.includes("MYRA") || sku.includes("CB") || sku.includes("DIVA") ||
                sku.includes("FW")|| sku.includes("VALV") || sku.includes("TER") || sku.includes("EVER") || sku.includes("MEG") || sku.includes("CAPO") ||
                sku.includes("0-V") || sku.includes("AMEL") || sku.includes("BRC") || sku.includes("PLUG") || sku.includes("SYDNEY") || sku.includes("ALMILA")  ||
-               results[i].Title.includes("BW")  || results[i].Title.includes("MH")  || results[i].Title.includes("Brackets") || results[i].Title.includes("BW31") ||
-               results[i].Title.includes("BW63")   ) {
+               title.includes("Brackets")   ) {
                   //DONT DO ANYTHING - SKIP - we filter unwanted SKUs
           } else {
                  // DO SOMETHING !!
@@ -111,8 +109,8 @@ function go_next() {
                    // console.log(counter);
 
                    for (var j = 0; j < results.length; j++) {
-                     if (results[j].CustomLabel == black_sku) {
-                       new_price = results[j].StartPrice;
+                     if (results[j].SKU == black_sku) {
+                       new_price = results[j].Regular_price;
                        include = true;
                        break;
                      }
@@ -127,42 +125,27 @@ function go_next() {
 
         //PUSH ****************************************
 
-          if (listing_tab){
+        // console.log(Object.values(results[i])[0]);
+
+        let id = Object.values(results[i])[0];
+
+          if (include){
             filtered.push([
-              results[i].Action,
-              results[i].ItemID,
-              results[i].Title,
-              results[i].SiteID,
-              results[i].Currency,
-              results[i].StartPrice,
-              "",
-              "",
-              results[i].BuyItNowPrice,
-              results[i].Quantity,
-              results[i].Relationship,
-              results[i].RelationshipDetails,
-              results[i].CustomLabel
-              ]);
-          } else if(include) {
-            filtered.push([
-              results[i].Action,
-              results[i].ItemID,
-              results[i].Title,
-              results[i].SiteID,
-              results[i].Currency,
+              id,
+              results[i].Type,
+              results[i].SKU,
+              results[i].Name,
+              results[i].Parent,
+              // results[i].Regular_price,
               new_price,
-              (results[i].StartPrice + "___OLD_ANT_PRICE"),
+              results[i].Regular_price + "___OLD_ANT_PRICE",
               black_sku,
-              results[i].BuyItNowPrice,
-              results[i].Quantity,
-              results[i].Relationship,
-              results[i].RelationshipDetails,
-              results[i].CustomLabel
+              (Math.round((results[i].Regular_price - new_price) * 100) / 100),
+              (Object.values(results[i]))
             ]);
           }
 
         //PUSH END ****************************************
-
 
     }
 
