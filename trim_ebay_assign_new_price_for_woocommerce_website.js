@@ -65,7 +65,7 @@ go_next();
 const header = ["ID","Type","SKU","Name","Parent", '"Regular price"', "Old_Black_Price", "Old_Black_SKU", "Difference", "FULL_OBJ"];
 
 function go_next() {
-  fs.createReadStream('wc-product-export-22-6-2021-1624375892944.csv')
+  fs.createReadStream('wc-product-export-23-6-2021-1624455981175.csv')
     .pipe(csv())
     .on('data', (data) => results.push(data))
     .on('end', () => {
@@ -157,7 +157,7 @@ function go_next() {
       });
 
 
-      fs.writeFile('./New_Price_Update_Competion.csv', csvFromArrayOfArrays, function (err) {
+      fs.writeFile('./New_Price_Update_Competion_B_WISDOM.csv', csvFromArrayOfArrays, function (err) {
         if (err) return console.log(err);
       });
 
