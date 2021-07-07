@@ -16,16 +16,16 @@ var filtered02 = [];
 
 go_next();
 
-const header = ["ID","Title","Post_Type","Radiator Width","Radiator Height","Parent", "Colour"];
+const header = ["ID", "Old title", "Title","Parent", "Old Element"];
 
 function go_next() {
-  fs.createReadStream('wc-product-export-2-6-2021-1622646064213.csv')
+  fs.createReadStream('wc-product-export-7-7-2021-1625651635698.csv')
     .pipe(csv())
     .on('data', (data) => results.push(data))
     .on('end', () => {
       for(let i = 0; i < results.length; i++){
-        if((results[i].Categories !== "")){
-          if(true){
+        if(results[i].Name.includes ("Heated Towel Rail") && !results[i].Name.includes ("Thermostatic")){
+          if(results[i].Type == "variable"){
 
             var title = results[i].Name.toString();
             var colour;
@@ -49,21 +49,41 @@ function go_next() {
             width = width.split(" - ");
             width = width[width.length - 1];
 
-            console.log(width);
+            let type = ( title.includes("Curved") ) ? "Curved" : "Straight";
+
+            let small = ( ( parseFloat(width) < 600 ) && ( parseFloat(height) < 900 ) ) ? "Small " : "";
+
+            let electric = ( title.includes("Electric") ) ? " Electric" : "";
+
+            let brand = "";
+
+            if        (title.includes("Accuro Korle")) {
+              brand = " Accuro Korle Designer";
+            } else if (title.includes("Sydney")) {
+              brand = " Sydney Designer";
+            } else if (title.includes("25mm Tube")){
+              brand = " Diva 25mm Tube";
+            } else if (title.includes("Capo")){
+              brand = " Capo";
+            }
+
+            let new_title = `${small}${colour}${electric} Heated Towel Rail Radiator ${width}mm x ${height}mm ${type}${brand} `;
+
+            // console.log(new_title);
+            // if (small !== "") {
+            //   console.log(new_title);
+            // }
 
             // 400 mm High – 1100mm Wide Flat White Heated Towel Rail Radiator
 
-            var ww = width;
-            var hh = height;
+            let id = Object.values(results[i])[0];
 
               filtered.push([
-                results[i].ID,
-                results[i].Name,
-                results[i].Categories,
-                ww,
-                hh,
+                id,
+                results[i].Name, // old title
+                new_title,
                 results[i].Parent,
-                colour
+                Object.values(results[i])
               ]);
             }
       }
@@ -79,7 +99,7 @@ function go_next() {
       });
 
 
-      fs.writeFile('./BW_new_colour_sizes.csv', csvFromArrayOfArrays, function (err) {
+      fs.writeFile('./Rewrite_titles.csv', csvFromArrayOfArrays, function (err) {
         if (err) return console.log(err);
       });
 
