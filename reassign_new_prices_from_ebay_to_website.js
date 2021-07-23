@@ -47,13 +47,13 @@ function save_array_from_csv () {
 const header = ["ID" ,	"Type" ,	"SKU"	, "Name" ,	"Radiator Only", "Regular price" ,	"Old Price" , "Difference" ,"Parent"];
 
 function go_next() {
-  fs.createReadStream('wc-product-export-22-7-2021-1626964647736 - wc-product-export-22-7-2021-1626964647736.csv')
+  fs.createReadStream('new chrome website prices myhomeware - bathroom wisdom.csv')
     .pipe(csv())
     .on('data', (data) => results.push(data))
     .on('end', () => {
       for(let i = 0; i < results.length; i++){
 
-        let sku = results[i].sku;
+        let sku = results[i].SKU;
 
         let include = false;
         let listing_tab = false;
@@ -152,7 +152,7 @@ function go_next() {
             filtered.push([
               results[i].ID,
               results[i].Type,
-              results[i].sku,
+              results[i].SKU,
               results[i].Name,
               prime_sku_price,
               new_price,
@@ -177,7 +177,7 @@ function go_next() {
       });
 
 
-      fs.writeFile('./New_Price_From_Ebay_To_Website.csv', csvFromArrayOfArrays, function (err) {
+      fs.writeFile('./New_Price_From_Ebay_To_Website_Bathroom_Wisdom.csv', csvFromArrayOfArrays, function (err) {
         if (err) return console.log(err);
       });
 
