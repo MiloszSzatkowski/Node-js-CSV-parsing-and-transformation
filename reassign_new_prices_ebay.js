@@ -22,7 +22,7 @@ var black_sku;
 save_array_from_csv();
 
 function save_array_from_csv () {
-  fs.createReadStream('ebay OLD PRICES 22 07 2021 - Sheet1.csv')
+  fs.createReadStream('ebay FC new prices table 04 08 2021.csv')
     .pipe(csv())
     .on('data', (data) => results02.push(data))
     .on('end', () => {
@@ -42,16 +42,17 @@ function save_array_from_csv () {
   });
 }
 
-const header = ["Action(SiteID=UK|Country=GB|Currency=GBP|Version=1111|CC=UTF-8)" ,	"ItemID",	"Title",	"SiteID",	"Currency",	"StartPrice",	"OldPrice", "Difference", "CustomLabel",	"Relationship",	"RelationshipDetails"];
+// const header = ["Action(SiteID=UK|Country=GB|Currency=GBP|Version=1111|CC=UTF-8)" ,	"ItemID",	"Title",	"SiteID",	"Currency",	"StartPrice",	"OldPrice", "Difference", "CustomLabel",	"Relationship",	"RelationshipDetails"];
+const header = ["Action" , 	"Item number"	, "Title", 	"Listing site", 	"Currency", "Start price",	"Old price", "Difference"	,"Buy It Now price"	, "Available quantity", 	"Relationship", 	"Relationship details", 	"Custom label (SKU)"];
 
 function go_next() {
-  fs.createReadStream('ebay OLD PRICES 22 07 2021 - FileExchange_Response_102232898.csv')
+  fs.createReadStream('eBay-active-listing-download-Aug-04-2021-04_42_29-0700-1218525213 - Sheet1 (1).csv')
     .pipe(csv())
     .on('data', (data) => results.push(data))
     .on('end', () => {
       for(let i = 0; i < results.length; i++){
 
-        let sku = results[i].CustomLabel;
+        let sku = results[i].Custom_label_SKU;
 
         let include = false;
         let listing_tab = false;
@@ -60,7 +61,7 @@ function go_next() {
 
         // START OF IF -> REVISE **********************************************************************************************************
         //check for the type of row
-        if (results[i].Action !== "Revise" &&  results[i].sku !== "") {
+        if (results[i].Action !== "Revise" &&  sku !== "") {
 
           //make prime sku
           let temp_sku = sku.split("-");
@@ -117,7 +118,7 @@ function go_next() {
           if ( !(sku.includes("-")) || sku.includes("FC65") || sku.includes("FC65") ||   sku.includes("FC20") || sku.includes("FC25") ||
                sku.includes("FC25") || sku.includes("FC130") || sku.includes("FC90-90")  || sku.includes("FC45-110")  ||    sku.includes("FC80-110")  ||
                sku.includes("FC100") ) {
-                 new_price = results[i].StartPrice;
+                 new_price = results[i].Start_price;
                } //omit old stock
 
         }
@@ -128,21 +129,27 @@ function go_next() {
 
         // const header = ["Action(SiteID=UK|Country=GB|Currency=GBP|Version=1111|CC=UTF-8)" ,	"ItemID",	"Title",	"SiteID",	"Currency",	"StartPrice",	"OldPrice", "Difference", "CustomLabel",	"Relationship",	"RelationshipDetails"];
 
-        let diff = (new_price !== "") ? parseFloat(new_price - results[i].StartPrice) : "";
+// newwwwwww !!!!
+        // Action,Item_number,Title,Listing_site,Currency,Start_price,Buy_It_Now_price,Available_quantity,Relationship,Relationship_details,Custom_label_SKU
+
+
+        let diff = (new_price !== "") ? parseFloat(new_price - results[i].Start_price) : "";
 
           if (true){
             filtered.push([
               results[i].Action,
-              results[i].ItemID,
+              results[i].Item_number,
               results[i].Title,
-              results[i].SiteID,
+              results[i].Listing_site,
               results[i].Currency,
               new_price,
-              results[i].StartPrice,
+              results[i].Start_price,
               diff,
-              results[i].CustomLabel,
+              results[i].Buy_It_Now_price,
+              results[i].Available_quantity,
               results[i].Relationship,
-              results[i].RelationshipDetails
+              results[i].Relationship_details,
+              results[i].Custom_label_SKU,
               ]);
           }
 
@@ -161,7 +168,7 @@ function go_next() {
       });
 
 
-      fs.writeFile('./New_Price_Ebay.csv', csvFromArrayOfArrays, function (err) {
+      fs.writeFile('./New_Price_Ebay_BW.csv', csvFromArrayOfArrays, function (err) {
         if (err) return console.log(err);
       });
 
