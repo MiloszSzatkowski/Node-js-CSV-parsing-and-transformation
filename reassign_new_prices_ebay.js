@@ -44,9 +44,9 @@ function save_array_from_csv () {
 
 // const header = ["Action(SiteID=UK|Country=GB|Currency=GBP|Version=1111|CC=UTF-8)" ,	"ItemID",	"Title",	"SiteID",	"Currency",	"StartPrice",	"OldPrice", "Difference", "CustomLabel",	"Relationship",	"RelationshipDetails"];
 const header = ["Action" , 	"Item number"	, "Title", 	"Listing site", 	"Currency", "Start price",	"Old price", "Difference"	,"Buy It Now price"	, "Available quantity", 	"Relationship", 	"Relationship details", 	"Custom label (SKU)"];
-
+// Action	Item number	Title	Listing site	Currency	Start price	Buy It Now price	Custom label (SKU)	Available quantity	Relationship	Relationship details
 function go_next() {
-  fs.createReadStream('eBay-active-listing-download-Aug-04-2021-04_42_29-0700-1218525213 - Sheet1 (1).csv')
+  fs.createReadStream('071020021mh.csv')
     .pipe(csv())
     .on('data', (data) => results.push(data))
     .on('end', () => {
@@ -62,6 +62,8 @@ function go_next() {
         // START OF IF -> REVISE **********************************************************************************************************
         //check for the type of row
         if (results[i].Action !== "Revise" &&  sku !== "") {
+
+          // Action,Item_number,Title,Listing_site,Currency,Start_price,Buy_It_Now price,Custom_label_SKU,Available_quantity,Relationship,Relationship_details
 
           //make prime sku
           let temp_sku = sku.split("-");
