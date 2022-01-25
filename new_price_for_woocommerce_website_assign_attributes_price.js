@@ -46,7 +46,7 @@ function go_next() {
 
         // START OF IF -> REVISE **********************************************************************************************************
         //check for the type of row
-        if ( results[i].Type == "variation" ) {
+        if ( true ) { //results[i].Type == "variation"
           if ( sku.includes("TER") || sku.includes("0-V") || sku.includes("SYDNEY") ||  sku.includes("BRC") || sku.includes("MYRA") || sku.includes("AIR")
               || sku.includes("0-WH") || sku.includes("0-BL")  || sku.includes("0-CH") || (sku == undefined) ||   sku.includes("-T-") || title.includes("Radiator Only")) {
             //skip
@@ -60,6 +60,16 @@ function go_next() {
               let temp_sku = sku.replace("DIVA-B-","");
               sku_of_radiator_only = temp_sku.split("-")[0] + "-" + temp_sku.split("-")[1];
               sku_of_radiator_only = "DIVA-B-" + sku_of_radiator_only;
+            } else if (sku.includes("CHAR-")) {
+              if (sku.includes("CHAR-ANT")) {
+                sku_of_radiator_only = "CHAR-ANT-50-75";
+              } else if ("CHAR-COPPER") {
+                sku_of_radiator_only = "CHAR-COPPER-50-75";
+              } else if ("CHAR-CHROME") {
+                sku_of_radiator_only = "CHAR-CHROME-50-75";
+              }
+            } else if ( sku.includes("TRAD-VICTORIA-AV") || sku.includes("TRAD-VICTORIA-SV")  ) {
+                sku_of_radiator_only = "TRAD-VICTORIA";
             } else {
               sku_of_radiator_only = sku.split("-")[0] + "-" + sku.split("-")[1];
             }

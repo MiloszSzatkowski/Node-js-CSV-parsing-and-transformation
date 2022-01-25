@@ -79,20 +79,14 @@ function check_for_radiator_only_sku (prime_sku) {
 
 // Action	Item number	Title	Listing site	Currency	Start price	Buy It Now price	Available quantity	Relationship	Relationship details	Custom label (SKU)
 // const header = ["Action(SiteID=UK|Country=GB|Currency=GBP|Version=1111|CC=UTF-8)" ,	"ItemID",	"Title",	"SiteID",	"Currency",	"StartPrice",	"OldPrice", "Difference", "CustomLabel",	"Relationship",	"RelationshipDetails"];
-const header = ["Action" , 	"Item number"	, "Title", 	"Listing site", 	"Currency",  "Start price",	"Old price", "Difference", "log", "Custom label (SKU)",
-"Buy It Now price"	, "Available quantity", 	"Relationship", 	"Relationship details" 	 ];
+const header = ["SKU",	"Price", "Stock" ];
+
 // Action	Item number	Title	Listing site	Currency	Start price	Buy It Now price	Custom label (SKU)	Available quantity	Relationship	Relationship details
 
-function beautify_price(nr) {
-  let temp = parseFloat((Math.round(nr * 5) / 5).toFixed(2));
-  temp = temp - 0.01;
-  return temp;
-}
+save_MH ();
 
-save_MH_PRICE();
-
-function save_MH_PRICE() {
-  fs.createReadStream('New Year 2022 Price Change Radiator - Upload of eBay NEW MH Radiator Prices (1).csv')
+function save_MH () {
+  fs.createReadStream('eBay-active-revise-price-quantity-download--Jan-25-2022-05_02_12-0700-1233774382.csv')
     .pipe(csv())
     .on('data', (data_mh) => mh_results.push(data_mh))
     .on('end', () => {
@@ -103,11 +97,11 @@ function save_MH_PRICE() {
 
 var lost_counter = 0;
 
-function lookup_MH_price (fun_sku) {
+function lookup_MH_qua (fun_sku) {
   let all_skus = [];
   for (var ppp = 0; ppp < mh_results.length; ppp++) {
     if ( mh_results[ppp].SKU.toString().trim() == fun_sku.toString().trim() ) {
-      all_skus.push(parseFloat(mh_results[ppp].Start_price));
+      all_skus.push(parseInt(mh_results[ppp].Available_quantity));
     }
   }
   all_skus = all_skus.sort(function(a, b) {
@@ -126,7 +120,7 @@ function lookup_MH_price (fun_sku) {
 }
 
 function go_next() {
-  fs.createReadStream('eBay-active-revise-price-quantity-download--Jan-25-2022-01_52_35-0700-1126438863.csv')
+  fs.createReadStream('price-and-stock-export-2022-01-25-12-01-27.csv')
     .pipe(csv())
     .on('data', (data) => results.push(data))
     .on('end', () => {
@@ -134,75 +128,29 @@ function go_next() {
 
         let log  = "";
 
-        sku = results[i].SKU;
-        let old_price = parseFloat(results[i].Start_price);
+        sku = results[i].sku;
 
+        new_quantity = lookup_MH_qua(sku) ;
 
-        // START OF IF -> REVISE **********************************************************************************************************
-        //check for the type of row
-        if (results[i].Action !== "Revise" &&  sku !== "") { // if it's a start of a listing -> begin
-
-        new_price = lookup_MH_price(sku) + 2 ;
-
-        if (new_price == "nf2") {
+        if (new_quantity == "nf2") {
           log = sku + " Not Found";
-          new_price = old_price;
+          new_quantity = 0;
         }
 
         log = "";
 
-        // new_price_arr == "Not Found" ? console.log(sku + " || New Price: " +  new_price_arr + " || Old Price " + old_price) : "";
-
-
-        let diff = (new_price !== "") ? parseFloat(new_price - results[i].Start_price) : "";
-
           if (true){
             filtered.push([
-              results[i].Action,
-              results[i].Item_number,
-              results[i].Title,
-              results[i].Listing_site,
-              results[i].Currency,
-              new_price,
-              results[i].Start_price,
-              diff,
-              log,
-              results[i].SKU,
-              results[i].Buy_It_Now_price,
-              results[i].Available_quantity,
-              results[i].Relationship,
-              results[i].Relationship_details,
+              sku,
+              parseFloat(results[i].price),
+              new_quantity
               ]);
           }
-
-          //,Action,Item_number,Title,Listing_site,Currency,Start_price,Buy_It_Now_price,Available_quantity,Relationship,Relationship_details,SKU
 
           // console.log(filtered[i]);
 
         //PUSH END ****************************************
 
-      } else { //push REVISE listing row
-
-          if (true){
-            filtered.push([
-              results[i].Action,
-              results[i].Item_number,
-              results[i].Title,
-              results[i].Listing_site,
-              results[i].Currency,
-              "",
-              results[i].Start_price,
-              "",
-              "",
-              results[i].SKU,
-              results[i].Buy_It_Now_price,
-              results[i].Available_quantity,
-              results[i].Relationship,
-              results[i].Relationship_details
-              ]);
-          }
-
-      }
     }
 
     console.log("Not found: " + lost_counter);

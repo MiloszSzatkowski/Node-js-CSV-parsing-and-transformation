@@ -79,8 +79,8 @@ function check_for_radiator_only_sku (prime_sku) {
 
 // Action	Item number	Title	Listing site	Currency	Start price	Buy It Now price	Available quantity	Relationship	Relationship details	Custom label (SKU)
 // const header = ["Action(SiteID=UK|Country=GB|Currency=GBP|Version=1111|CC=UTF-8)" ,	"ItemID",	"Title",	"SiteID",	"Currency",	"StartPrice",	"OldPrice", "Difference", "CustomLabel",	"Relationship",	"RelationshipDetails"];
-const header = ["Action" , 	"Item number"	, "Title", 	"Listing site", 	"Currency",  "Start price",	"Old price", "Difference", "log", "Custom label (SKU)",
-"Buy It Now price"	, "Available quantity", 	"Relationship", 	"Relationship details" 	 ];
+const header = ["ID",	"Type",	"SKU"	,"Name",	"Old price without VAT"	, "New price without VAT"	, "New price with VAT"	, "Ebay Price" , "Difference" , "Parent"	 ];
+
 // Action	Item number	Title	Listing site	Currency	Start price	Buy It Now price	Custom label (SKU)	Available quantity	Relationship	Relationship details
 
 function beautify_price(nr) {
@@ -125,8 +125,10 @@ function lookup_MH_price (fun_sku) {
   return all_skus[len-1];
 }
 
+var diff;
+
 function go_next() {
-  fs.createReadStream('eBay-active-revise-price-quantity-download--Jan-25-2022-01_52_35-0700-1126438863.csv')
+  fs.createReadStream('New Prices MH website - old prices.csv')
     .pipe(csv())
     .on('data', (data) => results.push(data))
     .on('end', () => {
@@ -135,14 +137,16 @@ function go_next() {
         let log  = "";
 
         sku = results[i].SKU;
-        let old_price = parseFloat(results[i].Start_price);
+        let old_price = parseFloat(results[i].Regular_price);
 
 
         // START OF IF -> REVISE **********************************************************************************************************
         //check for the type of row
-        if (results[i].Action !== "Revise" &&  sku !== "") { // if it's a start of a listing -> begin
+        if (true) { // if it's a start of a listing -> begin
 
-        new_price = lookup_MH_price(sku) + 2 ;
+        eBay_price = lookup_MH_price(sku);
+
+        new_price = eBay_price - 5;
 
         if (new_price == "nf2") {
           log = sku + " Not Found";
@@ -154,55 +158,35 @@ function go_next() {
         // new_price_arr == "Not Found" ? console.log(sku + " || New Price: " +  new_price_arr + " || Old Price " + old_price) : "";
 
 
-        let diff = (new_price !== "") ? parseFloat(new_price - results[i].Start_price) : "";
+        diff = (new_price !== "") ? parseFloat(new_price - eBay_price) : "";
 
-          if (true){
+        const header = ["ID",	"Type",	"SKU"	,"Name",	"Regular price"	,"Parent"	 ];
+
+        let new_price_no_VAT =  Math.round((new_price / 1.2) * 100) / 100;
+
+          if (results[i].Name.includes("Radiator Only")){
             filtered.push([
-              results[i].Action,
-              results[i].Item_number,
-              results[i].Title,
-              results[i].Listing_site,
-              results[i].Currency,
-              new_price,
-              results[i].Start_price,
-              diff,
-              log,
+              results[i].ID,
+              results[i].Type,
               results[i].SKU,
-              results[i].Buy_It_Now_price,
-              results[i].Available_quantity,
-              results[i].Relationship,
-              results[i].Relationship_details,
+              results[i].Name,
+              results[i].Regular_price,
+              new_price_no_VAT,
+              new_price,
+              eBay_price,
+              diff,
+              results[i].Parent
               ]);
           }
+	// "Old price without VAT"	, "New price without VAT"	, "New price with VAT"	, "Ebay Price" , "Difference"
 
-          //,Action,Item_number,Title,Listing_site,Currency,Start_price,Buy_It_Now_price,Available_quantity,Relationship,Relationship_details,SKU
 
           // console.log(filtered[i]);
 
         //PUSH END ****************************************
 
-      } else { //push REVISE listing row
-
-          if (true){
-            filtered.push([
-              results[i].Action,
-              results[i].Item_number,
-              results[i].Title,
-              results[i].Listing_site,
-              results[i].Currency,
-              "",
-              results[i].Start_price,
-              "",
-              "",
-              results[i].SKU,
-              results[i].Buy_It_Now_price,
-              results[i].Available_quantity,
-              results[i].Relationship,
-              results[i].Relationship_details
-              ]);
-          }
-
       }
+
     }
 
     console.log("Not found: " + lost_counter);
@@ -216,7 +200,7 @@ function go_next() {
       });
 
 
-      fs.writeFile('./New_Price_Ebay__Bathroom_Wisdom_2022_output'  + parseInt(20) + '.csv', csvFromArrayOfArrays, function (err) {
+      fs.writeFile('./New_price_website_MH'  + parseInt(20) + '.csv', csvFromArrayOfArrays, function (err) {
         if (err) return console.log(err);
       });
 
